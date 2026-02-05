@@ -8,7 +8,7 @@ import './index.css'
 import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
-    const { setMenuOpen } = useMenuStore()
+    const { menuOpen, setMenuOpen } = useMenuStore()
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -21,6 +21,23 @@ function App() {
         document.addEventListener('keydown', handleKeyDown)
         return () => document.removeEventListener('keydown', handleKeyDown)
     }, [setMenuOpen])
+
+    // Request pointer lock when clicking on the game area (when menu is closed)
+    useEffect(() => {
+        if (menuOpen) return
+
+        const handleClick = () => {
+            if (!document.pointerLockElement) {
+                const canvas = document.querySelector('canvas')
+                if (canvas) {
+                    canvas.requestPointerLock()
+                }
+            }
+        }
+
+        document.addEventListener('click', handleClick)
+        return () => document.removeEventListener('click', handleClick)
+    }, [menuOpen])
 
     return (
         <>

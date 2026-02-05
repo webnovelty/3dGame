@@ -23,6 +23,7 @@ export default function Menu() {
 
     const handlePlay = () => {
         setMenuOpen(false)
+        // Pointer lock will be requested on next click via App.tsx effect
     }
 
     const handleOpenSettings = () => {
@@ -31,6 +32,8 @@ export default function Menu() {
         setTempGraphics(graphics)
         setTempResolution(resolution)
         setTempShowFPS(showFPS)
+        // Ensure pointer is released for Settings screen
+        document.exitPointerLock()
     }
 
     const handleSaveSettings = () => {
@@ -47,6 +50,8 @@ export default function Menu() {
 
     const handleOpenAbout = () => {
         setAboutOpen(true)
+        // Ensure pointer is released for About screen
+        document.exitPointerLock()
     }
 
     const handleCloseAbout = () => {

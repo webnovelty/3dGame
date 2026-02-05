@@ -30,22 +30,113 @@ function Lake() {
     )
 }
 
+// Wave configuration
+const WAVE_CONFIG = {
+    baseEnemyCount: 3,          // Starting enemies in wave 1
+    enemiesPerWave: 2,          // Additional enemies each wave
+    baseHealth: 100,            // Base enemy health
+    healthPerWave: 25,          // Additional health each wave
+    spawnRadius: 25,            // How far from player enemies spawn
+    minSpawnDistance: 15,       // Minimum distance from player
+    countdownDuration: 3,       // Seconds between waves
+}
+
+// Generate spawn position around player
+function getSpawnPosition(playerPos: THREE.Vector3, index: number, total: number): THREE.Vector3 {
+    const angle = (index / total) * Math.PI * 2 + Math.random() * 0.5
+    const distance = WAVE_CONFIG.minSpawnDistance + Math.random() * (WAVE_CONFIG.spawnRadius - WAVE_CONFIG.minSpawnDistance)
+    return new THREE.Vector3(
+        playerPos.x + Math.cos(angle) * distance,
+        1,
+        playerPos.z + Math.sin(angle) * distance
+    )
+}
+
 function Game() {
     const [bullets, setBullets] = useState<any[]>([])
-    const [enemies, setEnemies] = useState([
-        { id: 1, position: new THREE.Vector3(-10, 1, -20), health: 100, maxHealth: 100, active: true, lastHit: 0 },
-        { id: 2, position: new THREE.Vector3(0, 1, -25), health: 100, maxHealth: 100, active: true, lastHit: 0 },
-        { id: 3, position: new THREE.Vector3(10, 1, -20), health: 100, maxHealth: 100, active: true, lastHit: 0 },
-        { id: 4, position: new THREE.Vector3(-15, 1, -30), health: 100, maxHealth: 100, active: true, lastHit: 0 },
-        { id: 5, position: new THREE.Vector3(15, 1, -30), health: 100, maxHealth: 100, active: true, lastHit: 0 },
-    ])
+    const [enemies, setEnemies] = useState<any[]>([])
+    const nextEnemyId = useRef(1)
 
     const {
         setScore,
         setHealth: setPlayerHealth,
         gameOver, setGameOver,
-        triggerHitMarker
+        triggerHitMarker,
+        wave,
+        betweenWaves, setBetweenWaves,
+        waveCountdown, setWaveCountdown,
+        setEnemiesRemaining,
+        startNextWave
     } = useGameStore()
+    
+    const countdownTimer = useRef<number | null>(null)
+    const waveStarted = useRef(false)
+
+    // Spawn a new wave of enemies
+    const spawnWave = (waveNumber: number, playerPos: THREE.Vector3) => {
+        const enemyCount = WAVE_CONFIG.baseEnemyCount + (waveNumber - 1) * WAVE_CONFIG.enemiesPerWave
+        const enemyHealth = WAVE_CONFIG.baseHealth + (waveNumber - 1) * WAVE_CONFIG.healthPerWave
+        
+        const newEnemies = []
+        for (let i = 0; i < enemyCount; i++) {
+            newEnemies.push({
+                id: nextEnemyId.current++,
+                position: getSpawnPosition(playerPos, i, enemyCount),
+                health: enemyHealth,
+                maxHealth: enemyHealth,
+                active: true,
+                lastHit: 0
+            })
+        }
+        
+        setEnemies(newEnemies)
+        setEnemiesRemaining(enemyCount)
+        waveStarted.current = true
+    }
+
+    // Wave countdown and spawning
+    useEffect(() => {
+        if (gameOver || !betweenWaves) return
+        
+        // Start countdown timer
+        if (countdownTimer.current === null) {
+            countdownTimer.current = window.setInterval(() => {
+                setWaveCountdown(Math.max(0, waveCountdown - 1))
+            }, 1000)
+        }
+        
+        // When countdown reaches 0, spawn the wave
+        if (waveCountdown === 0 && betweenWaves) {
+            if (countdownTimer.current !== null) {
+                clearInterval(countdownTimer.current)
+                countdownTimer.current = null
+            }
+            setBetweenWaves(false)
+            // Spawn at origin if game just started, otherwise we'll spawn in useFrame with camera position
+            spawnWave(wave, new THREE.Vector3(0, 0, 0))
+        }
+        
+        return () => {
+            if (countdownTimer.current !== null) {
+                clearInterval(countdownTimer.current)
+                countdownTimer.current = null
+            }
+        }
+    }, [betweenWaves, waveCountdown, gameOver, wave])
+
+    // Check if wave is complete
+    useEffect(() => {
+        if (gameOver || betweenWaves) return
+        
+        const activeEnemies = enemies.filter(e => e.active)
+        setEnemiesRemaining(activeEnemies.length)
+        
+        if (waveStarted.current && activeEnemies.length === 0) {
+            // Wave complete! Start next wave
+            waveStarted.current = false
+            startNextWave()
+        }
+    }, [enemies, gameOver, betweenWaves])
 
     const lastEnemyAttackTime = useRef(0)
     const enemyMeshes = useRef<{ [key: number]: THREE.Mesh }>({})

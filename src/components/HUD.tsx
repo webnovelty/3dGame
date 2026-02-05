@@ -2,7 +2,7 @@ import { useGameStore } from '../store'
 import { useEffect, useState } from 'react'
 
 export default function HUD() {
-    const { score, health, gameOver, hitMarker, reset: _reset } = useGameStore()
+    const { score, health, gameOver, hitMarker, reset: _reset, wave, enemiesRemaining, betweenWaves, waveCountdown } = useGameStore()
     const [showHitMarker, setShowHitMarker] = useState(false)
 
     useEffect(() => {
@@ -15,10 +15,45 @@ export default function HUD() {
 
     return (
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            {/* Top left - Score & Health */}
             <div style={{ position: 'absolute', top: 20, left: 20, color: 'white', fontFamily: 'sans-serif', pointerEvents: 'none' }}>
                 <div style={{ fontSize: '24px' }}>Score: {score}</div>
                 <div style={{ fontSize: '24px', color: health < 30 ? 'red' : 'white' }}>Health: {Math.ceil(health)}</div>
             </div>
+
+            {/* Top right - Wave info */}
+            <div style={{ position: 'absolute', top: 20, right: 20, color: 'white', fontFamily: 'sans-serif', textAlign: 'right', pointerEvents: 'none' }}>
+                <div style={{ fontSize: '24px', color: '#ffd700' }}>Wave {wave}</div>
+                {!betweenWaves && (
+                    <div style={{ fontSize: '18px', color: '#ff6b6b' }}>Enemies: {enemiesRemaining}</div>
+                )}
+            </div>
+
+            {/* Wave countdown overlay */}
+            {betweenWaves && !gameOver && (
+                <div style={{
+                    position: 'absolute',
+                    top: '30%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    textAlign: 'center',
+                    color: 'white',
+                    fontFamily: 'sans-serif',
+                    pointerEvents: 'none'
+                }}>
+                    <div style={{ fontSize: '32px', color: '#ffd700', marginBottom: '10px' }}>
+                        {wave === 1 ? 'Get Ready!' : `Wave ${wave} Incoming!`}
+                    </div>
+                    <div style={{
+                        fontSize: '72px',
+                        fontWeight: 'bold',
+                        color: waveCountdown <= 1 ? '#ff4444' : '#ffffff',
+                        textShadow: '0 0 20px rgba(255,255,255,0.5)'
+                    }}>
+                        {waveCountdown > 0 ? waveCountdown : 'GO!'}
+                    </div>
+                </div>
+            )}
 
             {/* Hit Marker */}
             {showHitMarker && (

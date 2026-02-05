@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+# 3D Shooter Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A first-person 3D shooter game built with React, TypeScript, Three.js, and React Three Fiber.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Core Gameplay
+- **First-person controls**: WASD movement, mouse look
+- **Shooting mechanics**: Left-click to shoot with hit detection
+- **Enemy AI**: Enemies chase and attack the player
+- **Health system**: Player takes damage from enemy attacks
 
-## React Compiler
+### Wave System
+- **Progressive waves**: Enemies spawn in waves with increasing difficulty
+- **Scaling difficulty**: Each wave adds more enemies with higher health
+- **Wave countdown**: 3-second preparation period between waves
+- **Wave UI**: Displays current wave number and remaining enemies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Performance Optimizations
+- **Object pooling**: Efficient memory management for Vector3/Quaternion objects
+- **Dynamic graphics settings**: Adjustable DPR, shadows, and antialiasing
+- **FPS monitoring**: Built-in Stats component for performance tracking
 
-## Expanding the ESLint configuration
+### Settings
+- **Volume control**: Music and sound effects
+- **Graphics presets**: Low, Medium, High, Ultra
+- **Sensitivity**: Mouse sensitivity adjustment
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Three.js** - 3D rendering
+- **React Three Fiber** - React renderer for Three.js
+- **@react-three/drei** - Useful helpers for R3F
+- **Zustand** - State management
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Controls
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Key | Action |
+|-----|--------|
+| W/A/S/D | Move |
+| Mouse | Look around |
+| Left Click | Shoot |
+| ESC | Pause menu |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
+
 ```
+src/
+├── components/
+│   ├── Scene.tsx      # Main game scene and logic
+│   ├── Player.tsx     # Player controller
+│   ├── Enemy.tsx      # Enemy AI and rendering
+│   ├── Gun.tsx        # Weapon model and animations
+│   ├── Bullet.tsx     # Projectile physics
+│   ├── HUD.tsx        # Health, score, wave display
+│   ├── Menu.tsx       # Pause menu and settings
+│   └── ErrorBoundary.tsx
+├── store.ts           # Zustand state management
+├── App.tsx            # Application root
+└── main.tsx           # Entry point
+```
+
+## Wave System Details
+
+The wave system introduces progressive difficulty:
+
+| Wave | Enemies | Enemy Health |
+|------|---------|--------------|
+| 1    | 3       | 100          |
+| 2    | 5       | 125          |
+| 3    | 7       | 150          |
+| 4    | 9       | 175          |
+| ...  | +2/wave | +25/wave     |
+
+Enemies spawn in a circle around the player at the start of each wave, with a 3-second countdown to prepare.
+
+## License
+
+MIT

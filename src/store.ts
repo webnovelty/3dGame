@@ -6,10 +6,21 @@ interface GameState {
     health: number
     gameOver: boolean
     hitMarker: number
+    // Wave system
+    wave: number
+    enemiesRemaining: number
+    betweenWaves: boolean
+    waveCountdown: number
     setScore: (score: number | ((prev: number) => number)) => void
     setHealth: (health: number | ((prev: number) => number)) => void
     setGameOver: (gameOver: boolean) => void
     triggerHitMarker: () => void
+    // Wave actions
+    setWave: (wave: number) => void
+    setEnemiesRemaining: (count: number | ((prev: number) => number)) => void
+    setBetweenWaves: (between: boolean) => void
+    setWaveCountdown: (countdown: number) => void
+    startNextWave: () => void
     reset: () => void
 }
 
@@ -36,11 +47,40 @@ export const useGameStore = create<GameState>((set) => ({
     health: 100,
     gameOver: false,
     hitMarker: 0,
+    // Wave system initial state
+    wave: 1,
+    enemiesRemaining: 0,
+    betweenWaves: true,
+    waveCountdown: 3,
+    
     setScore: (score) => set((state) => ({ score: typeof score === 'function' ? score(state.score) : score })),
     setHealth: (health) => set((state) => ({ health: typeof health === 'function' ? health(state.health) : health })),
     setGameOver: (gameOver) => set({ gameOver }),
     triggerHitMarker: () => set({ hitMarker: Date.now() }),
-    reset: () => set({ score: 0, health: 100, gameOver: false, hitMarker: 0 }),
+    
+    // Wave actions
+    setWave: (wave) => set({ wave }),
+    setEnemiesRemaining: (count) => set((state) => ({ 
+        enemiesRemaining: typeof count === 'function' ? count(state.enemiesRemaining) : count 
+    })),
+    setBetweenWaves: (between) => set({ betweenWaves: between }),
+    setWaveCountdown: (countdown) => set({ waveCountdown: countdown }),
+    startNextWave: () => set((state) => ({ 
+        wave: state.wave + 1, 
+        betweenWaves: true, 
+        waveCountdown: 3 
+    })),
+    
+    reset: () => set({ 
+        score: 0, 
+        health: 100, 
+        gameOver: false, 
+        hitMarker: 0,
+        wave: 1,
+        enemiesRemaining: 0,
+        betweenWaves: true,
+        waveCountdown: 3
+    }),
 }))
 
 export const useSettingsStore = create<SettingsState>()(

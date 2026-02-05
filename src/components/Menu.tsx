@@ -2,7 +2,7 @@ import { useMenuStore, useSettingsStore } from '../store'
 import { useState } from 'react'
 
 export default function Menu() {
-    const { menuOpen, settingsOpen, setMenuOpen, setSettingsOpen } = useMenuStore()
+    const { menuOpen, settingsOpen, aboutOpen, setMenuOpen, setSettingsOpen, setAboutOpen } = useMenuStore()
     const {
         mouseSensitivity,
         graphics,
@@ -45,6 +45,14 @@ export default function Menu() {
         setSettingsOpen(false)
     }
 
+    const handleOpenAbout = () => {
+        setAboutOpen(true)
+    }
+
+    const handleCloseAbout = () => {
+        setAboutOpen(false)
+    }
+
     return (
         <div style={{
             position: 'fixed',
@@ -59,7 +67,7 @@ export default function Menu() {
             alignItems: 'center',
             justifyContent: 'center',
         }}>
-            {!settingsOpen ? (
+            {!settingsOpen && !aboutOpen ? (
                 // Main Menu
                 <div style={{
                     textAlign: 'center',
@@ -81,7 +89,124 @@ export default function Menu() {
                         <button onClick={handleOpenSettings} style={buttonStyle}>
                             НАСТРОЙКИ
                         </button>
+                        <button onClick={handleOpenAbout} style={buttonStyle}>
+                            ОБ ИГРЕ
+                        </button>
                     </div>
+                </div>
+            ) : aboutOpen ? (
+                // About Screen
+                <div style={{
+                    background: 'rgba(0,0,0,0.9)',
+                    padding: '40px',
+                    borderRadius: '15px',
+                    color: 'white',
+                    fontFamily: 'Arial, sans-serif',
+                    maxWidth: '700px',
+                    maxHeight: '80vh',
+                    overflowY: 'auto',
+                }}>
+                    <h2 style={{ 
+                        textAlign: 'center', 
+                        marginBottom: '30px',
+                        fontSize: '36px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                    }}>
+                        ОБ ИГРЕ
+                    </h2>
+
+                    {/* Game Description */}
+                    <div style={sectionStyle}>
+                        <h3 style={sectionTitleStyle}>Описание</h3>
+                        <p style={textStyle}>
+                            3D Shooter — это динамичный шутер от первого лица, где вы должны 
+                            выживать против волн врагов. С каждой волной враги становятся 
+                            сильнее и их становится больше!
+                        </p>
+                    </div>
+
+                    {/* Controls */}
+                    <div style={sectionStyle}>
+                        <h3 style={sectionTitleStyle}>Управление</h3>
+                        <div style={controlsGridStyle}>
+                            <div style={controlItemStyle}>
+                                <span style={keyStyle}>W A S D</span>
+                                <span>Передвижение</span>
+                            </div>
+                            <div style={controlItemStyle}>
+                                <span style={keyStyle}>Мышь</span>
+                                <span>Обзор / Прицеливание</span>
+                            </div>
+                            <div style={controlItemStyle}>
+                                <span style={keyStyle}>ЛКМ</span>
+                                <span>Стрельба</span>
+                            </div>
+                            <div style={controlItemStyle}>
+                                <span style={keyStyle}>ESC</span>
+                                <span>Пауза / Меню</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Features */}
+                    <div style={sectionStyle}>
+                        <h3 style={sectionTitleStyle}>Особенности игры</h3>
+                        <ul style={featureListStyle}>
+                            <li style={featureItemStyle}>
+                                <span style={featureIconStyle}>🎯</span>
+                                <div>
+                                    <strong>Система волн</strong>
+                                    <p style={featureDescStyle}>Враги атакуют волнами. Каждая новая волна сложнее предыдущей!</p>
+                                </div>
+                            </li>
+                            <li style={featureItemStyle}>
+                                <span style={featureIconStyle}>📈</span>
+                                <div>
+                                    <strong>Прогрессия сложности</strong>
+                                    <p style={featureDescStyle}>+2 врага и +25 HP врагам за каждую волну</p>
+                                </div>
+                            </li>
+                            <li style={featureItemStyle}>
+                                <span style={featureIconStyle}>⏱️</span>
+                                <div>
+                                    <strong>Передышка между волнами</strong>
+                                    <p style={featureDescStyle}>3 секунды на подготовку перед каждой волной</p>
+                                </div>
+                            </li>
+                            <li style={featureItemStyle}>
+                                <span style={featureIconStyle}>💥</span>
+                                <div>
+                                    <strong>Хитмаркер</strong>
+                                    <p style={featureDescStyle}>Визуальное подтверждение попадания по врагу</p>
+                                </div>
+                            </li>
+                            <li style={featureItemStyle}>
+                                <span style={featureIconStyle}>⚙️</span>
+                                <div>
+                                    <strong>Настройки графики</strong>
+                                    <p style={featureDescStyle}>Настраивайте качество для оптимальной производительности</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Tips */}
+                    <div style={sectionStyle}>
+                        <h3 style={sectionTitleStyle}>Советы</h3>
+                        <ul style={{ ...featureListStyle, paddingLeft: '20px' }}>
+                            <li style={{ marginBottom: '8px', color: '#ccc' }}>Двигайтесь постоянно — стоячая цель легко поражается</li>
+                            <li style={{ marginBottom: '8px', color: '#ccc' }}>Следите за здоровьем — оно не восстанавливается</li>
+                            <li style={{ marginBottom: '8px', color: '#ccc' }}>Используйте паузу между волнами для отдыха</li>
+                            <li style={{ marginBottom: '8px', color: '#ccc' }}>Включите FPS в настройках для мониторинга производительности</li>
+                        </ul>
+                    </div>
+
+                    <button onClick={handleCloseAbout} style={{ ...buttonStyle, width: '100%', marginTop: '20px' }}>
+                        НАЗАД
+                    </button>
                 </div>
             ) : (
                 // Settings Menu
@@ -202,4 +327,79 @@ const selectStyle: React.CSSProperties = {
     border: '1px solid #555',
     borderRadius: '5px',
     cursor: 'pointer',
+}
+
+// About screen styles
+const sectionStyle: React.CSSProperties = {
+    marginBottom: '25px',
+    padding: '20px',
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '10px',
+    border: '1px solid rgba(255,255,255,0.1)',
+}
+
+const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '20px',
+    marginBottom: '15px',
+    color: '#ffd700',
+    borderBottom: '2px solid #ffd700',
+    paddingBottom: '8px',
+}
+
+const textStyle: React.CSSProperties = {
+    fontSize: '15px',
+    lineHeight: '1.6',
+    color: '#ddd',
+}
+
+const controlsGridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '15px',
+}
+
+const controlItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+    padding: '10px',
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: '8px',
+}
+
+const keyStyle: React.CSSProperties = {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    padding: '8px 12px',
+    borderRadius: '5px',
+    fontWeight: 'bold',
+    fontSize: '13px',
+    minWidth: '70px',
+    textAlign: 'center',
+}
+
+const featureListStyle: React.CSSProperties = {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+}
+
+const featureItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '15px',
+    marginBottom: '15px',
+    padding: '10px',
+    background: 'rgba(0,0,0,0.2)',
+    borderRadius: '8px',
+}
+
+const featureIconStyle: React.CSSProperties = {
+    fontSize: '24px',
+    minWidth: '35px',
+}
+
+const featureDescStyle: React.CSSProperties = {
+    fontSize: '13px',
+    color: '#aaa',
+    marginTop: '4px',
 }

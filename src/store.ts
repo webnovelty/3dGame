@@ -38,8 +38,10 @@ interface SettingsState {
 interface MenuState {
     menuOpen: boolean
     settingsOpen: boolean
+    aboutOpen: boolean
     setMenuOpen: (open: boolean) => void
     setSettingsOpen: (open: boolean) => void
+    setAboutOpen: (open: boolean) => void
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -104,6 +106,8 @@ export const useSettingsStore = create<SettingsState>()(
 export const useMenuStore = create<MenuState>((set) => ({
     menuOpen: true,
     settingsOpen: false,
+    aboutOpen: false,
     setMenuOpen: (open) => set({ menuOpen: open }),
     setSettingsOpen: (open) => set({ settingsOpen: open }),
+    setAboutOpen: (open) => set({ aboutOpen: open }),
 }))

@@ -1,11 +1,15 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
-import { useState, useRef, useEffect, Suspense } from 'react'
+import { useTexture, Stats } from '@react-three/drei'
+import { useState, useRef, useEffect, Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import Player from './Player'
 import Bullet from './Bullet'
 import Enemy from './Enemy'
-import { useGameStore } from '../store'
+import { useGameStore, useSettingsStore } from '../store'
+
+// Reusable Vector3 objects to avoid GC pressure (object pooling)
+const _bulletPos = new THREE.Vector3()
+const _enemyWorldPos = new THREE.Vector3()
 
 function Lake() {
     const texture = useTexture('/water.jpg')
@@ -84,16 +88,18 @@ function Game() {
                 return
             }
 
-            const bulletCurrentPos = bullet.position.clone().add(bullet.direction.clone().multiplyScalar(bullet.speed * age))
+            // Reuse _bulletPos instead of creating new Vector3
+            _bulletPos.copy(bullet.position)
+            _bulletPos.addScaledVector(bullet.direction, bullet.speed * age)
 
             for (let i = 0; i < currentEnemies.length; i++) {
                 const enemy = currentEnemies[i]
                 if (enemy.active && enemyMeshes.current[enemy.id]) {
                     const enemyMesh = enemyMeshes.current[enemy.id]
-                    const enemyWorldPos = new THREE.Vector3()
-                    enemyMesh.getWorldPosition(enemyWorldPos)
+                    // Reuse _enemyWorldPos instead of creating new Vector3
+                    enemyMesh.getWorldPosition(_enemyWorldPos)
 
-                    const dist = bulletCurrentPos.distanceTo(enemyWorldPos)
+                    const dist = _bulletPos.distanceTo(_enemyWorldPos)
                     if (dist < 1.5) {
                         bulletsToRemove.add(bullet.id)
                         currentEnemies[i] = { ...enemy, health: enemy.health - 25, lastHit: Date.now() }
@@ -125,10 +131,10 @@ function Game() {
         for (const enemy of activeEnemies) {
             if (enemyMeshes.current[enemy.id]) {
                 const enemyMesh = enemyMeshes.current[enemy.id]
-                const enemyWorldPos = new THREE.Vector3()
-                enemyMesh.getWorldPosition(enemyWorldPos)
+                // Reuse _enemyWorldPos
+                enemyMesh.getWorldPosition(_enemyWorldPos)
 
-                const distToPlayer = enemyWorldPos.distanceTo(playerPos)
+                const distToPlayer = _enemyWorldPos.distanceTo(playerPos)
                 if (distToPlayer < 2.0) {
                     if (time - lastEnemyAttackTime.current > 1.0) {
                         setPlayerHealth((h: number) => {
@@ -200,13 +206,29 @@ function Game() {
 }
 
 export default function Scene() {
+    const { graphics, resolution, showFPS } = useSettingsStore()
+    
+    // Memoize settings to avoid unnecessary re-renders
+    const shadowsEnabled = useMemo(() => graphics !== 'low', [graphics])
+    const dpr = useMemo(() => {
+        // Clamp resolution between 0.5 and device pixel ratio
+        const maxDpr = Math.min(window.devicePixelRatio, 2)
+        return Math.min(resolution, maxDpr)
+    }, [resolution])
+    
     return (
         <Canvas
-            shadows
+            shadows={shadowsEnabled}
+            dpr={dpr}
             camera={{ position: [0, 1.6, 5], fov: 75 }}
             onClick={(e) => (e.target as HTMLElement).requestPointerLock()}
             style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%' }}
+            gl={{ 
+                antialias: graphics === 'high',
+                powerPreference: graphics === 'low' ? 'low-power' : 'high-performance'
+            }}
         >
+            {showFPS && <Stats />}
             <Suspense fallback={null}>
                 <Game />
             </Suspense>

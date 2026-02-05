@@ -3,6 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import { Billboard, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
+// Reusable Vector3 for direction calculation (shared between all enemies)
+const _direction = new THREE.Vector3()
+
 interface EnemyProps {
     initialPosition: [number, number, number]
     health: number
@@ -21,14 +24,13 @@ export default function Enemy({ initialPosition, health, maxHealth, registerMesh
     const speed = 0.5
 
     useEffect(() => {
-        console.log(`Enemy ${id} spawned at ${initialPosition}`)
         if (meshRef.current) {
             registerMesh(id, meshRef.current)
         }
         return () => {
             unregisterMesh(id)
         }
-    }, [id, registerMesh, unregisterMesh, initialPosition])
+    }, [id, registerMesh, unregisterMesh])
 
     // Flash effect
     useEffect(() => {
@@ -47,13 +49,12 @@ export default function Enemy({ initialPosition, health, maxHealth, registerMesh
             const playerPos = state.camera.position
             const enemyPos = groupRef.current.position
 
-            const direction = new THREE.Vector3()
-            direction.subVectors(playerPos, enemyPos).normalize()
+            // Reuse _direction instead of creating new Vector3
+            _direction.subVectors(playerPos, enemyPos)
+            _direction.y = 0 // Ignore Y axis for movement (stay on ground)
+            _direction.normalize()
 
-            // Ignore Y axis for movement (stay on ground)
-            direction.y = 0
-
-            groupRef.current.position.add(direction.multiplyScalar(speed * delta))
+            groupRef.current.position.addScaledVector(_direction, speed * delta)
             groupRef.current.lookAt(playerPos.x, groupRef.current.position.y, playerPos.z)
         }
     })

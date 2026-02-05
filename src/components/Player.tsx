@@ -5,6 +5,11 @@ import * as THREE from 'three'
 import Gun, { type GunHandle } from './Gun'
 import { useSettingsStore } from '../store'
 
+// Reusable vectors for player movement (object pooling)
+const _forward = new THREE.Vector3()
+const _right = new THREE.Vector3()
+const _moveDir = new THREE.Vector3()
+
 export default function Player({ onShoot }: { onShoot: (position: THREE.Vector3, direction: THREE.Vector3) => void }) {
     const { camera } = useThree()
     const { mouseSensitivity } = useSettingsStore()
@@ -97,26 +102,27 @@ export default function Player({ onShoot }: { onShoot: (position: THREE.Vector3,
     }, [onShoot, camera, isJumping])
 
     useFrame((_, delta) => {
-        const forward = new THREE.Vector3()
-        camera.getWorldDirection(forward)
-        forward.y = 0
-        forward.normalize()
+        // Reuse _forward instead of creating new Vector3
+        camera.getWorldDirection(_forward)
+        _forward.y = 0
+        _forward.normalize()
 
-        const right = new THREE.Vector3()
-        right.crossVectors(forward, camera.up).normalize()
+        // Reuse _right instead of creating new Vector3
+        _right.crossVectors(_forward, camera.up).normalize()
 
-        const moveDir = new THREE.Vector3()
-        if (moveForward) moveDir.add(forward)
-        if (moveBackward) moveDir.sub(forward)
-        if (moveRight) moveDir.add(right)
-        if (moveLeft) moveDir.sub(right)
-        moveDir.normalize()
+        // Reuse _moveDir instead of creating new Vector3
+        _moveDir.set(0, 0, 0)
+        if (moveForward) _moveDir.add(_forward)
+        if (moveBackward) _moveDir.sub(_forward)
+        if (moveRight) _moveDir.add(_right)
+        if (moveLeft) _moveDir.sub(_right)
+        _moveDir.normalize()
 
         const accel = 150.0
 
-        if (moveDir.length() > 0) {
-            velocity.current.x += moveDir.x * accel * delta
-            velocity.current.z += moveDir.z * accel * delta
+        if (_moveDir.length() > 0) {
+            velocity.current.x += _moveDir.x * accel * delta
+            velocity.current.z += _moveDir.z * accel * delta
         }
 
         velocity.current.x -= velocity.current.x * 10.0 * delta

@@ -17,8 +17,8 @@ export default function Bullet({ position, direction, onHit: _onHit, id: _id, sp
     useFrame(() => {
         if (meshRef.current) {
             const age = (Date.now() - spawnTime) / 1000
-            // Calculate position: start + dir * speed * age
-            meshRef.current.position.copy(position).add(direction.clone().multiplyScalar(speed * age))
+            // Optimized: use copy + addScaledVector instead of clone + multiplyScalar
+            meshRef.current.position.copy(position).addScaledVector(direction, speed * age)
         }
     })
 

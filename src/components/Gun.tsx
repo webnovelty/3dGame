@@ -2,6 +2,13 @@ import { useRef, forwardRef, useImperativeHandle } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
+// Reusable objects for gun positioning (object pooling)
+const _cameraWorldPosition = new THREE.Vector3()
+const _cameraWorldQuaternion = new THREE.Quaternion()
+const _localOffset = new THREE.Vector3()
+const _barrelTipOffset = new THREE.Vector3()
+const _tempQuaternion = new THREE.Quaternion()
+
 export interface GunHandle {
     getBarrelPosition: () => THREE.Vector3
     triggerRecoil: () => void
@@ -31,36 +38,34 @@ const Gun = forwardRef<GunHandle, GunProps>(({ isMoving }, ref) => {
     useFrame((state) => {
         if (!groupRef.current) return
 
-        // Get camera world transform
-        const cameraWorldPosition = new THREE.Vector3()
-        const cameraWorldQuaternion = new THREE.Quaternion()
-        camera.getWorldPosition(cameraWorldPosition)
-        camera.getWorldQuaternion(cameraWorldQuaternion)
+        // Reuse vectors instead of creating new ones
+        camera.getWorldPosition(_cameraWorldPosition)
+        camera.getWorldQuaternion(_cameraWorldQuaternion)
 
         // Apply camera transform to gun
-        groupRef.current.position.copy(cameraWorldPosition)
-        groupRef.current.quaternion.copy(cameraWorldQuaternion)
+        groupRef.current.position.copy(_cameraWorldPosition)
+        groupRef.current.quaternion.copy(_cameraWorldQuaternion)
 
-        // Apply local offset in camera space
-        const localOffset = new THREE.Vector3(0.3, -0.25, -0.4)
+        // Apply local offset in camera space (reuse _localOffset)
+        _localOffset.set(0.3, -0.25, -0.4)
 
         // Walking bob animation (slowed down)
         if (isMoving) {
             walkCycle.current += state.clock.getDelta() * 6 // Reduced from 10
-            localOffset.y += Math.sin(walkCycle.current) * 0.015 // Reduced amplitude
-            localOffset.x += Math.cos(walkCycle.current * 0.5) * 0.008 // Reduced amplitude
+            _localOffset.y += Math.sin(walkCycle.current) * 0.015 // Reduced amplitude
+            _localOffset.x += Math.cos(walkCycle.current * 0.5) * 0.008 // Reduced amplitude
         }
 
         // Recoil animation
         const timeSinceRecoil = (Date.now() - recoilTime.current) / 1000
         if (timeSinceRecoil < 0.2) {
             const recoilAmount = Math.max(0, 1 - timeSinceRecoil / 0.2)
-            localOffset.z += recoilAmount * 0.1 // Pull back
-            localOffset.y += recoilAmount * 0.05 // Lift up
+            _localOffset.z += recoilAmount * 0.1 // Pull back
+            _localOffset.y += recoilAmount * 0.05 // Lift up
         }
 
-        localOffset.applyQuaternion(cameraWorldQuaternion)
-        groupRef.current.position.add(localOffset)
+        _localOffset.applyQuaternion(_cameraWorldQuaternion)
+        groupRef.current.position.add(_localOffset)
 
         // Idle sway
         const time = state.clock.elapsedTime
@@ -72,10 +77,11 @@ const Gun = forwardRef<GunHandle, GunProps>(({ isMoving }, ref) => {
             groupRef.current.updateMatrixWorld()
             barrelRef.current.getWorldPosition(barrelWorldPos.current)
 
-            // Add offset to tip of barrel (forward in barrel's local space)
-            const barrelTipOffset = new THREE.Vector3(0, -0.2, 0) // -Y because cylinder is rotated
-            barrelTipOffset.applyQuaternion(barrelRef.current.getWorldQuaternion(new THREE.Quaternion()))
-            barrelWorldPos.current.add(barrelTipOffset)
+            // Add offset to tip of barrel (reuse vectors)
+            _barrelTipOffset.set(0, -0.2, 0) // -Y because cylinder is rotated
+            barrelRef.current.getWorldQuaternion(_tempQuaternion)
+            _barrelTipOffset.applyQuaternion(_tempQuaternion)
+            barrelWorldPos.current.add(_barrelTipOffset)
         }
     }, 1) // Priority 1 to update AFTER camera movement
 
